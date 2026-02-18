@@ -1,0 +1,113 @@
+{
+  "_NOTA_IMPORTANTE": "Este archivo utiliza una DISTRIBUCIÓN PERSONALIZADA definida abajo en 'particle_distribution'.",
+  "_COMO_EDITAR": "Para cambiar cantidades, edita la lista 'particle_distribution'. La configuración standard 'particles.number' se ignora.",
+
+  "particle_distribution": [
+    { "count": 1, "size": 300 },
+    { "count": 5, "size": 150 },
+    { "count": 10, "size": 75 },
+    { "count": 10, "size": 50 },
+    { "count": 100, "size": 15 }
+  ],
+
+  "particles": {
+    "number": {
+      "value": 0,
+      "density": {
+        "enable": true,
+        "value_area": 800
+      }
+    },
+    "color": {
+      "value": ["#22439B", "#00ACFF", "#F1F5F8"]
+    },
+    "shape": {
+      "type": "circle",
+      "stroke": {
+        "width": 0,
+        "color": "#000000"
+      }
+    },
+    "opacity": {
+      "value": 0.4,
+      "random": true,
+      "anim": {
+        "enable": true,
+        "speed": 0.2,
+        "opacity_min": 0.1,
+        "sync": false
+      }
+    },
+    "size": {
+      "value": 200,
+      "random": {
+        "enable": true,
+        "minimumValue": 3
+      },
+      "anim": {
+        "enable": true,
+        "speed": 2,
+        "size_min": 3,
+        "sync": false
+      }
+    },
+    "move": {
+      "enable": true,
+      "speed": 0.8,
+      "direction": "none",
+      "random": true,
+      "straight": false,
+      "out_mode": "bounce",
+      "bounce": false,
+      "attract": {
+        "enable": false,
+        "rotateX": 600,
+        "rotateY": 1200
+      }
+    },
+    "collisions": {
+      "enable": false,
+      "mode": "bounce"
+    }
+  },
+  "interactivity": {
+    "detect_on": "window",
+    "events": {
+      "onhover": {
+        "enable": true,
+        "mode": "repulse",
+        "parallax": {
+          "enable": false,
+          "force": 60,
+          "smooth": 10
+        }
+      },
+      "onclick": {
+        "enable": false,
+        "mode": "push"
+      },
+      "resize": true
+    },
+    "modes": {
+      "bubble": {
+        "distance": 200,
+        "size": 110,
+        "duration": 2,
+        "opacity": 0.8,
+        "speed": 3
+      },
+      "repulse": {
+        "distance": 100,
+        "duration": 0.4
+      }
+    }
+  },
+  "retina_detect": true,
+  "background": {
+      "color": "transparent",
+      "image": "",
+      "position": "50% 50%",
+      "repeat": "no-repeat",
+      "size": "cover"
+  }
+}
