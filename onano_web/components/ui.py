@@ -1,15 +1,10 @@
 import reflex as rx
-
-# --- COLORES DE MARCA ---
-BRAND_DARK_BLUE = "#22439B"
-BRAND_LIGHT_BLUE = "#00ACFF"
-# Degradado oficial para botones y acentos llamativos
-BRAND_GRADIENT = f"linear-gradient(180deg, {BRAND_LIGHT_BLUE} -90%, {BRAND_DARK_BLUE} 100%)"
+from ..styles.colors import BRAND_DARK_BLUE, BRAND_LIGHT_BLUE, BRAND_GRADIENT
 
 def logo() -> rx.Component:
     """ONANO logo con tamaño responsivo."""
     return rx.image(
-        src="logotipoBlanco-onano.svg",
+        src="isologo-dark.svg",
         #src="logotipo-onano.svg",
         alt="ONANO Logo",
         # Tamaño responsivo: más pequeño en móvil (50%), controlado en escritorio (25em)
