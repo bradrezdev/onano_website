@@ -2,29 +2,28 @@ import reflex as rx
 from ..styles.colors import BRAND_DARK_BLUE, BRAND_LIGHT_BLUE, BRAND_GRADIENT
 
 
-def molecule_background() -> rx.Component:
+def particle_hero_bg() -> rx.Component:
     """
-    Fondo interactivo de moléculas nanotecnológicas (Canvas + JS).
-    Reemplaza a Spline — más ligero, configurable y on-brand.
-    El script es auto-inicializable (MutationObserver + polling).
+    Fondo interactivo: aglomeración de nanopartículas → dispersión al click.
+    Canvas + JS, auto-inicializable (MutationObserver).
+    El canvas recibe pointer-events para detectar clicks sobre la aglomeración.
     """
     return rx.box(
         rx.el.canvas(
-            id="molecule-canvas",
+            id="particle-hero-canvas",
             style={
                 "display": "block",
                 "width": "100%",
                 "height": "100%",
             },
         ),
-        rx.script(src="/scripts/molecule_field.js"),
+        rx.script(src="/scripts/particle_hero.js"),
         position="absolute",
         top="0",
         left="0",
         width="100%",
         height="100%",
         z_index="0",
-        style={"pointer_events": "none"},
     )
 
 

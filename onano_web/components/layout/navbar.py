@@ -63,7 +63,7 @@ def navbar() -> rx.Component:
         rx.hstack(
             # Logo
             rx.link(
-                Isologo.light(),
+                Isologo.dark(),
                 href="/",
             ),
             rx.spacer(),
@@ -101,7 +101,9 @@ def navbar() -> rx.Component:
             z_index="1",  # Contenido sobre las capas de blur
         ),
         position="fixed",
-        top="0",
+        align="center",
+        justify="center",
+        top="10px",
         z_index="999",
         width="100%",
     )
