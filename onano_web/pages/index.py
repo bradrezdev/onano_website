@@ -129,6 +129,9 @@ def hero_section() -> rx.Component:
             height="100%",
             padding_y=["18vh", "20vh"],
             padding_x="1.5em",
+            # position="relative" es CRÍTICO: sin él, z-index no aplica
+            # en elementos no-posicionados vs. el canvas position:absolute
+            position="relative",
             z_index="2",
             pointer_events="none",
         ),

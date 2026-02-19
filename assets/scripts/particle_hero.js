@@ -42,6 +42,8 @@ function initParticleHero(canvasId, opts) {
     impulseMin:     5,
     impulseMax:     11,
     transitionMs:   1800,
+    dispersedHoldMs: 3500,  // tiempo flotando antes de reaglomerarse
+    reagglomMs:      2000,  // duración de la reaglomeración
     /* Física (post-dispersión) */
     attraction:     0.028,
     friction:       0.974,
@@ -73,7 +75,7 @@ function initParticleHero(canvasId, opts) {
   /* ═══════════════════════════════════════════════════════
      ESTADO
      ═══════════════════════════════════════════════════════ */
-  var STATE = 'agglomerated';   // 'agglomerated' | 'dispersing' | 'dispersed'
+  var STATE = 'agglomerated';   // 'agglomerated' | 'dispersing' | 'dispersed' | 'reagglomerating'
   var particles   = [];
   var clusterMeta = [];         // { targetX, targetY, driftVx, driftVy }
 
@@ -93,6 +95,7 @@ function initParticleHero(canvasId, opts) {
   function Particle(x, y, cid) {
     this.x  = x;   this.y  = y;
     this.hx = x;   this.hy = y;       // home (agglomerated)
+    this.origHx = x; this.origHy = y; // posición original (para restaurar)
     this.vx = 0;   this.vy = 0;
     this.r  = rand(1.4, 4.6);
     this.op = rand(0.45, 0.95);
@@ -177,6 +180,41 @@ function initParticleHero(canvasId, opts) {
     }
 
     setTimeout(function () { STATE = 'dispersed'; }, D.transitionMs);
+
+    /* Programar reaglomeración automática tras el tiempo de flotación */
+    setTimeout(function () { reagglomerate(); }, D.transitionMs + D.dispersedHoldMs);
+  }
+
+  /* ═══════════════════════════════════════════════════════
+     REAGLOMERACIÓN
+     ═══════════════════════════════════════════════════════ */
+  function reagglomerate() {
+    if (STATE !== 'dispersed') return;
+    STATE = 'reagglomerating';
+
+    var cx = W / 2, cy = H / 2;
+    /* Dirigir todos los targets al centro */
+    for (var c = 0; c < clusterMeta.length; c++) {
+      clusterMeta[c].targetX  = cx;
+      clusterMeta[c].targetY  = cy;
+      clusterMeta[c].driftVx  = 0;
+      clusterMeta[c].driftVy  = 0;
+    }
+
+    /* Forzar finalización si en reagglomMs ms aún no se completó */
+    setTimeout(function () {
+      if (STATE === 'reagglomerating') finishReagglomerate();
+    }, D.reagglomMs + 400);
+  }
+
+  function finishReagglomerate() {
+    STATE = 'agglomerated';
+    for (var i = 0; i < particles.length; i++) {
+      var p = particles[i];
+      p.vx = 0;  p.vy = 0;
+      p.hx = p.origHx;  p.hy = p.origHy;
+      p.x  = p.hx;      p.y  = p.hy;
+    }
   }
 
   /* ═══════════════════════════════════════════════════════
@@ -201,6 +239,44 @@ function initParticleHero(canvasId, opts) {
           p.hy += dy * 0.0004;
         }
       }
+    } else if (STATE === 'reagglomerating') {
+      /* ── REAGLOMERACIÓN — atracción fuerte hacia el centro ── */
+      var settled = 0;
+      for (i = 0; i < particles.length; i++) {
+        p  = particles[i];
+        cl = clusterMeta[p.cid]; // todos los targets apuntan a (cx, cy)
+
+        var dx = cl.targetX - p.x;
+        var dy = cl.targetY - p.y;
+        var dd = Math.sqrt(dx * dx + dy * dy);
+
+        if (dd < 3) {
+          settled++;
+          p.vx *= 0.7;  p.vy *= 0.7;
+        } else {
+          var force = D.attraction * 4.2 * Math.min(dd * 0.10, 1.8);
+          p.vx += (dx / dd) * force;
+          p.vy += (dy / dd) * force;
+        }
+
+        /* Micro-vibración residual suave (mantiene organicidad) */
+        var vib = Math.sin(t * 0.001 * p.vSpd + p.vPhase);
+        p.vx += vib * p.vDirX * 0.006;
+        p.vy += vib * p.vDirY * 0.006;
+
+        /* Fricción extra para convergencia suave */
+        p.vx *= D.friction * 0.97;
+        p.vy *= D.friction * 0.97;
+
+        p.x += p.vx;
+        p.y += p.vy;
+      }
+
+      /* Si ≥90% de partículas ya convergieron, finalizar */
+      if (settled >= particles.length * 0.90) {
+        finishReagglomerate();
+      }
+
     } else {
       /* ── Dispersing / Dispersed — física ── */
       var ellA = W * D.containX;
@@ -287,6 +363,7 @@ function initParticleHero(canvasId, opts) {
     if (STATE === 'agglomerated') {
       drawAgglomerated(t);
     } else {
+      /* dispersing, dispersed, reagglomerating — misma visual de clústeres */
       drawDispersed();
     }
   }
