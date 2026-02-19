@@ -4,9 +4,9 @@ from ..styles.colors import BRAND_DARK_BLUE, BRAND_LIGHT_BLUE, BRAND_GRADIENT
 
 def particle_hero_bg() -> rx.Component:
     """
-    Fondo interactivo: aglomeración de nanopartículas → dispersión al click.
-    Canvas + JS, auto-inicializable (MutationObserver).
-    El canvas recibe pointer-events para detectar clicks sobre la aglomeración.
+    Fondo interactivo de nanopartículas — controlado por scroll.
+    Canvas position:fixed → persiste en viewport sin remontarse.
+    pointer_events:none → el scroll controla las partículas, no el click.
     """
     return rx.box(
         rx.el.canvas(
@@ -17,13 +17,17 @@ def particle_hero_bg() -> rx.Component:
                 "height": "100%",
             },
         ),
+        # Particle physics engine
         rx.script(src="/scripts/particle_hero.js"),
-        position="absolute",
-        top="0",
+        # Scroll timeline controller
+        rx.script(src="/scripts/scroll_timeline.js"),
+        position="fixed",
+        top="-64px",
         left="0",
-        width="100%",
-        height="100%",
+        width="100vw",
+        height="100dvh",
         z_index="0",
+        pointer_events="none",
     )
 
 

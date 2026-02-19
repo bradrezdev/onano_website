@@ -1,18 +1,19 @@
 /**
- * ONANO Particle Hero — Nanoparticle Agglomeration → Dispersion
+ * ONANO Particle Hero v2 — Scroll-Driven Nanoparticle Simulation
  *
- * Simula científicamente la transición de una aglomeración compacta
- * de partículas hacia pequeñas aglomeraciones de nanopartículas.
+ * Simula la transición científica de una aglomeración compacta de
+ * nanopartículas hacia sub-clústeres dispersos, finalizando con
+ * encapsulación protectora.
  *
- * Estados:
- *   1. AGGLOMERATED  — Clúster central compacto con micro-vibración
- *   2. DISPERSING    — Transición (burst outward)
- *   3. DISPERSED     — Pequeños clústeres de 3-5 partículas flotando
+ * Control:
+ *   – setScrollProgress(0→1)  — timeline maestro controlado externamente
+ *   – Fase 1 (0→0.33): vibración intensa (estado aglomerado activo)
+ *   – Fase 2 (0.33→0.66): dispersión hacia sub-clústeres nanométricos
+ *   – Fase 3 (0.66→1.0): encapsulación — círculos "stroke-draw" progresivos
  *
- * Interacción: click / tap sobre la aglomeración activa la dispersión.
  * Auto-inicializable con MutationObserver (Reflex SPA).
  *
- * @version 1.0.0
+ * @version 2.0.0
  */
 
 function initParticleHero(canvasId, opts) {
@@ -22,43 +23,35 @@ function initParticleHero(canvasId, opts) {
      CONFIGURACIÓN
      ═══════════════════════════════════════════════════════ */
   var D = {
-    particleCount:       120,
-    clusterMin:          3,
-    clusterMax:          5,
-    /* Colores  (RGB arrays para rgba() rápida) */
-    cyan:        [12, 188, 229],     // #0CBCE5
-    cyanLight:   [61, 201, 234],     // #3DC9EA
-    cyanPale:    [206, 242, 250],    // #CEF2FA
-    darkBlue:    [6,  42,  99],      // #062A63
-    bg:          '#070D1A',
+    particleCount:   120,
+    clusterMin:      3,
+    clusterMax:      5,
+    /* Colores */
+    cyan:       [12, 188, 229],   // #0CBCE5
+    cyanLight:  [61, 201, 234],   // #3DC9EA
+    cyanPale:   [206, 242, 250],  // #CEF2FA
+    darkBlue:   [6,  42,  99],    // #062A63
+    bg:         '#070D1A',
     /* Aglomeración */
-    agglomRadius:   0.10,           // fracción de min(W,H)
-    agglomGlow:     0.18,           // radio del glow central
+    agglomRadius:  0.10,
+    agglomGlow:    0.18,
     /* Vibración */
-    vibAmp:         2.8,            // px
-    vibSpeedMin:    0.6,
-    vibSpeedMax:    2.0,
-    /* Dispersión */
-    impulseMin:     5,
-    impulseMax:     11,
-    transitionMs:   1800,
-    dispersedHoldMs: 3500,  // tiempo flotando antes de reaglomerarse
-    reagglomMs:      2000,  // duración de la reaglomeración
-    /* Física (post-dispersión) */
-    attraction:     0.028,
-    friction:       0.974,
-    containerForce: 0.009,
-    drift:          0.006,
-    /* Contención elíptica (fracción viewport) */
-    containX:       0.42,           // semi-eje X  (~84 % ancho)
-    containY:       0.20,           // semi-eje Y  (~40 % alto ≈ 50 vh visual)
+    vibAmp:        2.8,
+    vibSpeedMin:   0.6,
+    vibSpeedMax:   2.0,
+    /* Dispersión — semi-ejes de la elipse como fracción del canvas (W y H).
+     * 📐 AJUSTE MANUAL: sube containX/containY para más expansión.
+     *    containX 0.42 = moderado | 0.54 = amplio | 0.68 = máximo
+     *    containY 0.20 = moderado | 0.32 = amplio | 0.45 = máximo      */
+    containX:      0.54,
+    containY:      0.32,
     /* Render */
-    glowMul:        3.5,
-    connAlphaAgg:   0.055,
-    connAlphaDisp:  0.22,
-    /* Pulso visual (hint interactividad) */
-    pulseSpeed:     0.0012,
-    pulseAmp:       0.25,
+    glowMul:       3.5,
+    connAlphaAgg:  0.055,
+    connAlphaDisp: 0.22,
+    /* Pulso visual */
+    pulseSpeed:    0.0012,
+    pulseAmp:      0.25,
   };
 
   if (opts) { for (var k in opts) { if (opts.hasOwnProperty(k)) D[k] = opts[k]; } }
@@ -68,21 +61,29 @@ function initParticleHero(canvasId, opts) {
      ═══════════════════════════════════════════════════════ */
   var canvas = document.getElementById(canvasId);
   if (!canvas) return null;
-  var ctx    = canvas.getContext('2d');
+  var ctx = canvas.getContext('2d');
   var W = 0, H = 0, dpr = 1;
   var animId;
 
   /* ═══════════════════════════════════════════════════════
      ESTADO
      ═══════════════════════════════════════════════════════ */
-  var STATE = 'agglomerated';   // 'agglomerated' | 'dispersing' | 'dispersed' | 'reagglomerating'
-  var particles   = [];
-  var clusterMeta = [];         // { targetX, targetY, driftVx, driftVy }
+  var particles        = [];
+  var clusterMeta      = [];
+  var clusterMembers   = null;   // Array<Array<index>> — precalculado
+  var dispersedTargets = null;   // Array<{tx,ty}> — determinístico (sin aleatoriedad)
+
+  /* Scroll-driven state */
+  var scrollProgress = 0.0;
+  var encapProgress  = 0.0;
 
   /* ═══════════════════════════════════════════════════════
      UTILIDADES
      ═══════════════════════════════════════════════════════ */
   function rgba(c, a) { return 'rgba(' + c[0] + ',' + c[1] + ',' + c[2] + ',' + a + ')'; }
+  function lerp(a, b, t) { return a + (b - a) * t; }
+  function smoothStep(t) { return t * t * (3 - 2 * t); }
+  function clamp(v, lo, hi) { return v < lo ? lo : v > hi ? hi : v; }
   function rand(lo, hi) { return lo + Math.random() * (hi - lo); }
   function gaussRand() {
     var u = 1 - Math.random(), v = Math.random();
@@ -93,14 +94,11 @@ function initParticleHero(canvasId, opts) {
      PARTÍCULA
      ═══════════════════════════════════════════════════════ */
   function Particle(x, y, cid) {
-    this.x  = x;   this.y  = y;
-    this.hx = x;   this.hy = y;       // home (agglomerated)
-    this.origHx = x; this.origHy = y; // posición original (para restaurar)
-    this.vx = 0;   this.vy = 0;
-    this.r  = rand(1.4, 4.6);
-    this.op = rand(0.45, 0.95);
-    this.cid = cid;                     // cluster id
-    /* vibración */
+    this.x  = x;  this.y  = y;
+    this.hx = x;  this.hy = y;  // posición home (agglomerated)
+    this.r   = rand(1.4, 4.6);
+    this.op  = rand(0.45, 0.95);
+    this.cid = cid;
     this.vPhase = Math.random() * Math.PI * 2;
     this.vSpd   = rand(D.vibSpeedMin, D.vibSpeedMax);
     this.vDirX  = (Math.random() - 0.5) * 2;
@@ -114,7 +112,6 @@ function initParticleHero(canvasId, opts) {
     var cx = W / 2, cy = H / 2;
     var baseR = Math.min(W, H) * D.agglomRadius;
 
-    /* Asignar cluster IDs */
     particles   = [];
     clusterMeta = [];
     var assignments = [];
@@ -126,13 +123,11 @@ function initParticleHero(canvasId, opts) {
       }
       cid++;
     }
-    /* Shuffle */
     for (var i = assignments.length - 1; i > 0; i--) {
       var j = Math.floor(Math.random() * (i + 1));
       var tmp = assignments[i]; assignments[i] = assignments[j]; assignments[j] = tmp;
     }
 
-    /* Crear partículas — distribución gaussiana */
     for (var i = 0; i < D.particleCount; i++) {
       var ang  = Math.random() * Math.PI * 2;
       var dist = Math.min(Math.abs(gaussRand()) * baseR * 0.45, baseR * 1.2);
@@ -143,203 +138,91 @@ function initParticleHero(canvasId, opts) {
       ));
     }
 
-    /* Metadata de clústeres */
     for (var c = 0; c < cid; c++) {
-      clusterMeta.push({ targetX: cx, targetY: cy, driftVx: 0, driftVy: 0 });
+      clusterMeta.push({ c: c });
     }
+
+    buildClusterMemberLists();
+    computeDispersedTargets();
+    dispersedTargets = null;  // Se recalcula en el primer uso post-resize
   }
 
   /* ═══════════════════════════════════════════════════════
-     DISPERSIÓN
+     PRECÁLCULOS
      ═══════════════════════════════════════════════════════ */
-  function disperse() {
-    if (STATE !== 'agglomerated') return;
-    STATE = 'dispersing';
+  /**
+   * Índices de partículas por clúster — O(1) lookup.
+   */
+  function buildClusterMemberLists() {
+    clusterMembers = [];
+    for (var c = 0; c < clusterMeta.length; c++) clusterMembers.push([]);
+    for (var i = 0; i < particles.length; i++) clusterMembers[particles[i].cid].push(i);
+  }
 
+  /**
+   * Posiciones objetivo de dispersión, determinísticas (sin Math.random).
+   * Garantiza que scroll-up/down sea el espejo exacto del mismo movimiento.
+   */
+  function computeDispersedTargets() {
+    if (!particles.length) return;
     var cx = W / 2, cy = H / 2;
     var ellA = W * D.containX;
     var ellB = H * D.containY;
+    var N = clusterMeta.length;
 
-    /* Posiciones objetivo para cada clúster */
-    for (var c = 0; c < clusterMeta.length; c++) {
-      var ang = (c / clusterMeta.length) * Math.PI * 2 + rand(-0.4, 0.4);
-      var rf  = rand(0.25, 0.82);
-      clusterMeta[c].targetX = cx + Math.cos(ang) * ellA * rf;
-      clusterMeta[c].targetY = cy + Math.sin(ang) * ellB * rf;
-      clusterMeta[c].driftVx = rand(-0.15, 0.15);
-      clusterMeta[c].driftVy = rand(-0.15, 0.15);
+    /* Targets por clúster — ángulos y radios determinísticos */
+    var cTargets = [];
+    for (var c = 0; c < N; c++) {
+      var ang = (c / N) * Math.PI * 2 + (c % 3 === 0 ? 0.42 : c % 3 === 1 ? -0.31 : 0.18);
+      /* 📐 AJUSTE MANUAL: rf define qué tan lejos del centro cae cada clúster.
+       *  base 0.28→0.38 = compacto | 0.38→0.48 = amplio              */
+      var rf  = 0.38 + (c % 5) * 0.13;
+      cTargets.push({
+        tx: cx + Math.cos(ang) * ellA * rf,
+        ty: cy + Math.sin(ang) * ellB * rf,
+      });
     }
 
-    /* Impulso de salida a cada partícula */
+    /* Por partícula: offset dentro del clúster usando vDirX/Y (fijo) */
+    dispersedTargets = [];
     for (var i = 0; i < particles.length; i++) {
-      var p   = particles[i];
-      var ang = Math.atan2(p.y - cy, p.x - cx) + rand(-0.45, 0.45);
-      var imp = rand(D.impulseMin, D.impulseMax);
-      p.vx = Math.cos(ang) * imp;
-      p.vy = Math.sin(ang) * imp;
-    }
-
-    setTimeout(function () { STATE = 'dispersed'; }, D.transitionMs);
-
-    /* Programar reaglomeración automática tras el tiempo de flotación */
-    setTimeout(function () { reagglomerate(); }, D.transitionMs + D.dispersedHoldMs);
-  }
-
-  /* ═══════════════════════════════════════════════════════
-     REAGLOMERACIÓN
-     ═══════════════════════════════════════════════════════ */
-  function reagglomerate() {
-    if (STATE !== 'dispersed') return;
-    STATE = 'reagglomerating';
-
-    var cx = W / 2, cy = H / 2;
-    /* Dirigir todos los targets al centro */
-    for (var c = 0; c < clusterMeta.length; c++) {
-      clusterMeta[c].targetX  = cx;
-      clusterMeta[c].targetY  = cy;
-      clusterMeta[c].driftVx  = 0;
-      clusterMeta[c].driftVy  = 0;
-    }
-
-    /* Forzar finalización si en reagglomMs ms aún no se completó */
-    setTimeout(function () {
-      if (STATE === 'reagglomerating') finishReagglomerate();
-    }, D.reagglomMs + 400);
-  }
-
-  function finishReagglomerate() {
-    STATE = 'agglomerated';
-    for (var i = 0; i < particles.length; i++) {
-      var p = particles[i];
-      p.vx = 0;  p.vy = 0;
-      p.hx = p.origHx;  p.hy = p.origHy;
-      p.x  = p.hx;      p.y  = p.hy;
+      var p  = particles[i];
+      var ct = cTargets[p.cid];
+      var offset = 9 + (i % D.clusterMax) * 3.5;
+      dispersedTargets.push({
+        tx: ct.tx + p.vDirX * offset,
+        ty: ct.ty + p.vDirY * offset,
+      });
     }
   }
 
   /* ═══════════════════════════════════════════════════════
-     UPDATE
+     UPDATE — SCROLL-DRIVEN
      ═══════════════════════════════════════════════════════ */
   function update(t) {
-    var cx = W / 2, cy = H / 2;
-    var i, p, cl;
+    var sp = scrollProgress;
 
-    if (STATE === 'agglomerated') {
-      /* ── Micro-vibración + atracción suave al centro ── */
-      for (i = 0; i < particles.length; i++) {
-        p = particles[i];
-        var vib = Math.sin(t * 0.001 * p.vSpd + p.vPhase);
-        p.x = p.hx + vib * p.vDirX * D.vibAmp;
-        p.y = p.hy + vib * p.vDirY * D.vibAmp;
-        /* Atracción leve hacia el centro (cohesión) */
-        var dx = cx - p.hx, dy = cy - p.hy;
-        var d  = Math.sqrt(dx * dx + dy * dy);
-        if (d > 2) {
-          p.hx += dx * 0.0004;
-          p.hy += dy * 0.0004;
-        }
-      }
-    } else if (STATE === 'reagglomerating') {
-      /* ── REAGLOMERACIÓN — atracción fuerte hacia el centro ── */
-      var settled = 0;
-      for (i = 0; i < particles.length; i++) {
-        p  = particles[i];
-        cl = clusterMeta[p.cid]; // todos los targets apuntan a (cx, cy)
+    /* Fases del scroll (0→1) */
+    var p1 = smoothStep(clamp(sp / 0.33, 0, 1));           // vibración
+    var p2 = smoothStep(clamp((sp - 0.33) / 0.33, 0, 1));  // dispersión
+    encapProgress = smoothStep(clamp((sp - 0.66) / 0.34, 0, 1)); // encapsulación
 
-        var dx = cl.targetX - p.x;
-        var dy = cl.targetY - p.y;
-        var dd = Math.sqrt(dx * dx + dy * dy);
+    var vibMul = 1 + p1 * 2.6;  // vibración hasta 3.6× en pico
 
-        if (dd < 3) {
-          settled++;
-          p.vx *= 0.7;  p.vy *= 0.7;
-        } else {
-          var force = D.attraction * 4.2 * Math.min(dd * 0.10, 1.8);
-          p.vx += (dx / dd) * force;
-          p.vy += (dy / dd) * force;
-        }
+    if (!dispersedTargets) computeDispersedTargets();
 
-        /* Micro-vibración residual suave (mantiene organicidad) */
-        var vib = Math.sin(t * 0.001 * p.vSpd + p.vPhase);
-        p.vx += vib * p.vDirX * 0.006;
-        p.vy += vib * p.vDirY * 0.006;
+    for (var i = 0; i < particles.length; i++) {
+      var p  = particles[i];
+      var dt = dispersedTargets[i];
 
-        /* Fricción extra para convergencia suave */
-        p.vx *= D.friction * 0.97;
-        p.vy *= D.friction * 0.97;
+      /* Posición base: lerp home → target (reversible en scroll-up) */
+      var bx = lerp(p.hx, dt.tx, p2);
+      var by = lerp(p.hy, dt.ty, p2);
 
-        p.x += p.vx;
-        p.y += p.vy;
-      }
-
-      /* Si ≥90% de partículas ya convergieron, finalizar */
-      if (settled >= particles.length * 0.90) {
-        finishReagglomerate();
-      }
-
-    } else {
-      /* ── Dispersing / Dispersed — física ── */
-      var ellA = W * D.containX;
-      var ellB = H * D.containY;
-
-      /* Drift orgánico de clústeres */
-      for (i = 0; i < clusterMeta.length; i++) {
-        cl = clusterMeta[i];
-        cl.targetX += cl.driftVx;
-        cl.targetY += cl.driftVy;
-        /* Contención suave */
-        var nx = (cl.targetX - cx) / ellA;
-        var ny = (cl.targetY - cy) / ellB;
-        var nd = nx * nx + ny * ny;
-        if (nd > 0.82) {
-          var push = (nd - 0.82) * 0.025;
-          cl.driftVx -= nx * push;
-          cl.driftVy -= ny * push;
-        }
-        cl.driftVx += (Math.random() - 0.5) * D.drift;
-        cl.driftVy += (Math.random() - 0.5) * D.drift;
-        cl.driftVx *= 0.996;
-        cl.driftVy *= 0.996;
-      }
-
-      /* Actualizar partículas */
-      for (i = 0; i < particles.length; i++) {
-        p  = particles[i];
-        cl = clusterMeta[p.cid];
-
-        /* Atracción hacia target del clúster */
-        var dx = cl.targetX - p.x;
-        var dy = cl.targetY - p.y;
-        var dd = Math.sqrt(dx * dx + dy * dy);
-        if (dd > 1) {
-          var force = D.attraction * Math.min(dd * 0.12, 1);
-          p.vx += (dx / dd) * force;
-          p.vy += (dy / dd) * force;
-        }
-
-        /* Micro-vibración residual */
-        var vib = Math.sin(t * 0.001 * p.vSpd + p.vPhase);
-        p.vx += vib * p.vDirX * 0.018;
-        p.vy += vib * p.vDirY * 0.018;
-
-        /* Fricción */
-        p.vx *= D.friction;
-        p.vy *= D.friction;
-
-        /* Integrar posición */
-        p.x += p.vx;
-        p.y += p.vy;
-
-        /* Contención elíptica individual */
-        var enx = (p.x - cx) / (ellA * 1.08);
-        var eny = (p.y - cy) / (ellB * 1.08);
-        var end = enx * enx + eny * eny;
-        if (end > 1) {
-          var ef = (end - 1) * D.containerForce * 9;
-          p.vx -= enx * ef;
-          p.vy -= eny * ef;
-        }
-      }
+      /* Vibración orgánica sobre la posición base */
+      var vib = Math.sin(t * 0.001 * p.vSpd + p.vPhase);
+      p.x = bx + vib * p.vDirX * D.vibAmp * vibMul;
+      p.y = by + vib * p.vDirY * D.vibAmp * vibMul;
     }
   }
 
@@ -347,36 +230,44 @@ function initParticleHero(canvasId, opts) {
      RENDER
      ═══════════════════════════════════════════════════════ */
   function draw(t) {
-    /* Fondo */
     ctx.fillStyle = D.bg;
     ctx.fillRect(0, 0, W, H);
 
-    /* Viñeta radial sutil */
+    /* Viñeta radial */
     var vigR = Math.max(W, H) * 0.7;
     var vig  = ctx.createRadialGradient(W / 2, H / 2, 0, W / 2, H / 2, vigR);
-    vig.addColorStop(0, rgba(D.cyan, 0.018));
+    vig.addColorStop(0,   rgba(D.cyan, 0.018));
     vig.addColorStop(0.5, rgba(D.darkBlue, 0.008));
-    vig.addColorStop(1, 'rgba(0,0,0,0)');
+    vig.addColorStop(1,   'rgba(0,0,0,0)');
     ctx.fillStyle = vig;
     ctx.fillRect(0, 0, W, H);
 
-    if (STATE === 'agglomerated') {
+    var sp = scrollProgress;
+    var p2 = clamp((sp - 0.33) / 0.33, 0, 1);
+
+    if (p2 < 0.05) {
+      /* Fase 1 + inicial: visual de aglomeración */
       drawAgglomerated(t);
     } else {
-      /* dispersing, dispersed, reagglomerating — misma visual de clústeres */
+      /* Fase 2+: visual de clústeres dispersos */
       drawDispersed();
     }
+
+    /* Fase 3: anillos de encapsulación */
+    if (encapProgress > 0) drawEncapsulation();
   }
 
   /* ── Render: aglomeración ─────────────────────────────── */
   function drawAgglomerated(t) {
     var cx = W / 2, cy = H / 2;
 
-    /* Glow central pulsante (hint de interactividad) */
-    var pulse = 1 + Math.sin(t * D.pulseSpeed) * D.pulseAmp * 0.35;
-    var glR   = Math.min(W, H) * D.agglomGlow * pulse;
-    var glow  = ctx.createRadialGradient(cx, cy, 0, cx, cy, glR);
-    glow.addColorStop(0,   rgba(D.cyan, 0.065));
+    /* Glow central pulsante */
+    var sp     = scrollProgress;
+    var p1     = smoothStep(clamp(sp / 0.33, 0, 1));
+    var pulse  = 1 + Math.sin(t * D.pulseSpeed) * D.pulseAmp * (0.35 + p1 * 0.4);
+    var glR    = Math.min(W, H) * D.agglomGlow * pulse;
+    var glow   = ctx.createRadialGradient(cx, cy, 0, cx, cy, glR);
+    glow.addColorStop(0,   rgba(D.cyan, 0.065 + p1 * 0.05));
     glow.addColorStop(0.4, rgba(D.cyan, 0.025));
     glow.addColorStop(1,   rgba(D.cyan, 0));
     ctx.beginPath();
@@ -384,9 +275,9 @@ function initParticleHero(canvasId, opts) {
     ctx.fillStyle = glow;
     ctx.fill();
 
-    /* Conexiones internas (bonds moleculares, muy sutiles) */
-    var baseR = Math.min(W, H) * D.agglomRadius;
-    var thresh = baseR * baseR * 0.12;
+    /* Conexiones moleculares */
+    var baseR  = Math.min(W, H) * D.agglomRadius;
+    var thresh = baseR * baseR * 0.14;
     ctx.beginPath();
     for (var i = 0; i < particles.length; i++) {
       for (var j = i + 1; j < particles.length; j++) {
@@ -402,48 +293,44 @@ function initParticleHero(canvasId, opts) {
     ctx.lineWidth   = 0.4;
     ctx.stroke();
 
-    /* Partículas */
     drawParticles();
   }
 
-  /* ── Render: dispersión ───────────────────────────────── */
+  /* ── Render: clústeres dispersos ──────────────────────── */
   function drawDispersed() {
-    var i, c, m, a, b;
+    if (!clusterMembers) return;
 
-    /* Por cada clúster: glow compartido + conexiones internas */
-    for (c = 0; c < clusterMeta.length; c++) {
-      var members = [];
-      for (i = 0; i < particles.length; i++) {
-        if (particles[i].cid === c) members.push(particles[i]);
-      }
-      if (members.length < 2) continue;
+    for (var c = 0; c < clusterMembers.length; c++) {
+      var mIdx = clusterMembers[c];
+      if (mIdx.length < 2) continue;
 
-      /* Centro del clúster */
       var avgX = 0, avgY = 0;
-      for (m = 0; m < members.length; m++) { avgX += members[m].x; avgY += members[m].y; }
-      avgX /= members.length;
-      avgY /= members.length;
+      for (var m = 0; m < mIdx.length; m++) {
+        avgX += particles[mIdx[m]].x;
+        avgY += particles[mIdx[m]].y;
+      }
+      avgX /= mIdx.length;
+      avgY /= mIdx.length;
 
-      /* Glow compartido (refuerza apariencia de aglomeración) */
-      var cgR  = 28 + members.length * 3;
-      var cGlow = ctx.createRadialGradient(avgX, avgY, 0, avgX, avgY, cgR);
-      cGlow.addColorStop(0, rgba(D.cyan, 0.03));
-      cGlow.addColorStop(1, rgba(D.cyan, 0));
+      /* Glow compartido */
+      var cgR  = 28 + mIdx.length * 3;
+      var cgl  = ctx.createRadialGradient(avgX, avgY, 0, avgX, avgY, cgR);
+      cgl.addColorStop(0, rgba(D.cyan, 0.032));
+      cgl.addColorStop(1, rgba(D.cyan, 0));
       ctx.beginPath();
       ctx.arc(avgX, avgY, cgR, 0, Math.PI * 2);
-      ctx.fillStyle = cGlow;
+      ctx.fillStyle = cgl;
       ctx.fill();
 
       /* Conexiones intra-clúster */
       ctx.beginPath();
-      for (a = 0; a < members.length; a++) {
-        for (b = a + 1; b < members.length; b++) {
-          var dx = members[a].x - members[b].x;
-          var dy = members[a].y - members[b].y;
-          var dist = Math.sqrt(dx * dx + dy * dy);
-          if (dist < 90) {
-            ctx.moveTo(members[a].x, members[a].y);
-            ctx.lineTo(members[b].x, members[b].y);
+      for (var a = 0; a < mIdx.length; a++) {
+        for (var b = a + 1; b < mIdx.length; b++) {
+          var pa = particles[mIdx[a]], pb = particles[mIdx[b]];
+          var dx = pa.x - pb.x, dy = pa.y - pb.y;
+          if (Math.sqrt(dx * dx + dy * dy) < 90) {
+            ctx.moveTo(pa.x, pa.y);
+            ctx.lineTo(pb.x, pb.y);
           }
         }
       }
@@ -452,7 +339,6 @@ function initParticleHero(canvasId, opts) {
       ctx.stroke();
     }
 
-    /* Partículas */
     drawParticles();
   }
 
@@ -461,7 +347,6 @@ function initParticleHero(canvasId, opts) {
     for (var i = 0; i < particles.length; i++) {
       var p = particles[i];
 
-      /* Glow / halo */
       var gr   = p.r * D.glowMul;
       var grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, gr);
       grad.addColorStop(0, rgba(D.cyan, p.op * 0.22));
@@ -471,11 +356,66 @@ function initParticleHero(canvasId, opts) {
       ctx.fillStyle = grad;
       ctx.fill();
 
-      /* Núcleo */
       ctx.beginPath();
       ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
       ctx.fillStyle = rgba(D.cyanLight, p.op);
       ctx.fill();
+    }
+  }
+
+  /* ── Render: encapsulación (Fase 3) ───────────────────── */
+  function drawEncapsulation() {
+    if (!clusterMembers || encapProgress <= 0) return;
+    var ep = encapProgress;
+
+    for (var c = 0; c < clusterMembers.length; c++) {
+      var mIdx = clusterMembers[c];
+      if (mIdx.length < 2) continue;
+
+      /* Centro de masa del clúster */
+      var cx = 0, cy = 0;
+      for (var m = 0; m < mIdx.length; m++) {
+        cx += particles[mIdx[m]].x;
+        cy += particles[mIdx[m]].y;
+      }
+      cx /= mIdx.length;
+      cy /= mIdx.length;
+
+      /* Radio envolvente */
+      var maxD = 0;
+      for (var m = 0; m < mIdx.length; m++) {
+        var dx = particles[mIdx[m]].x - cx;
+        var dy = particles[mIdx[m]].y - cy;
+        var d  = Math.sqrt(dx * dx + dy * dy);
+        if (d > maxD) maxD = d;
+      }
+      var r = maxD + particles[mIdx[0]].r * 3 + 7;
+
+      /* Stroke-draw progresivo: comienza desde -π/2, barre ep*2π */
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * ep);
+      ctx.strokeStyle = rgba(D.cyan, (0.40 + ep * 0.35) * ep);
+      ctx.lineWidth   = 0.8 + ep * 0.6;
+      ctx.stroke();
+
+      /* Segundo anillo tenue (profundidad) */
+      ctx.beginPath();
+      ctx.arc(cx, cy, r + 4, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * ep);
+      ctx.strokeStyle = rgba(D.cyan, 0.10 * ep);
+      ctx.lineWidth   = 0.5;
+      ctx.stroke();
+
+      /* Relleno glow en el interior al cerrar (ep > 0.5) */
+      if (ep > 0.5) {
+        var fe   = (ep - 0.5) * 2;
+        var fgl  = ctx.createRadialGradient(cx, cy, r * 0.25, cx, cy, r);
+        fgl.addColorStop(0, rgba(D.cyan, 0.025 * fe));
+        fgl.addColorStop(1, rgba(D.cyan, 0));
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        ctx.fillStyle = fgl;
+        ctx.fill();
+      }
     }
   }
 
@@ -484,59 +424,14 @@ function initParticleHero(canvasId, opts) {
      ═══════════════════════════════════════════════════════ */
   function resize() {
     var par = canvas.parentElement;
-    W   = par.clientWidth;
-    H   = par.clientHeight;
+    W   = par ? par.clientWidth  : window.innerWidth;
+    H   = par ? par.clientHeight : window.innerHeight;
     dpr = window.devicePixelRatio || 1;
     canvas.width  = W * dpr;
     canvas.height = H * dpr;
     canvas.style.width  = W + 'px';
     canvas.style.height = H + 'px';
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  }
-
-  /* ═══════════════════════════════════════════════════════
-     EVENTOS
-     ═══════════════════════════════════════════════════════ */
-  function onClick(e) {
-    if (STATE !== 'agglomerated') return;
-    var rect = canvas.getBoundingClientRect();
-    var mx = e.clientX - rect.left;
-    var my = e.clientY - rect.top;
-    var dx = mx - W / 2, dy = my - H / 2;
-    if (Math.sqrt(dx * dx + dy * dy) < Math.min(W, H) * 0.22) {
-      disperse();
-    }
-  }
-
-  function onTouchEnd(e) {
-    if (STATE !== 'agglomerated') return;
-    var t = e.changedTouches && e.changedTouches[0];
-    if (!t) return;
-    var rect = canvas.getBoundingClientRect();
-    var mx = t.clientX - rect.left;
-    var my = t.clientY - rect.top;
-    var dx = mx - W / 2, dy = my - H / 2;
-    if (Math.sqrt(dx * dx + dy * dy) < Math.min(W, H) * 0.22) {
-      disperse();
-    }
-  }
-
-  var resizeTimer;
-  function onResize() {
-    clearTimeout(resizeTimer);
-    resizeTimer = setTimeout(function () {
-      var oW = W || 1, oH = H || 1;
-      resize();
-      var sx = W / oW, sy = H / oH;
-      for (var i = 0; i < particles.length; i++) {
-        particles[i].x  *= sx;  particles[i].y  *= sy;
-        particles[i].hx *= sx;  particles[i].hy *= sy;
-      }
-      for (var c = 0; c < clusterMeta.length; c++) {
-        clusterMeta[c].targetX *= sx;
-        clusterMeta[c].targetY *= sy;
-      }
-    }, 100);
   }
 
   /* ═══════════════════════════════════════════════════════
@@ -549,25 +444,54 @@ function initParticleHero(canvasId, opts) {
   }
 
   /* ═══════════════════════════════════════════════════════
+     EVENTOS
+     ═══════════════════════════════════════════════════════ */
+  var resizeTimer;
+  function onResize() {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(function () {
+      var oW = W || 1, oH = H || 1;
+      resize();
+      var sx = W / oW, sy = H / oH;
+      for (var i = 0; i < particles.length; i++) {
+        particles[i].hx *= sx;
+        particles[i].hy *= sy;
+      }
+      dispersedTargets = null;  // Recalcular post-resize
+    }, 100);
+  }
+
+  window.addEventListener('resize', onResize);
+
+  /* ═══════════════════════════════════════════════════════
+     API PÚBLICA
+     ═══════════════════════════════════════════════════════ */
+  var api = {
+    /**
+     * Setter principal del timeline de scroll.
+     * @param {number} p  — progreso normalizado 0–1
+     */
+    setScrollProgress: function (p) {
+      scrollProgress = clamp(p, 0, 1);
+    },
+    destroy: function () {
+      cancelAnimationFrame(animId);
+      window.removeEventListener('resize', onResize);
+    },
+  };
+
+  if (!window.__oParticleHero) {
+    window.__oParticleHero = api;
+  }
+
+  /* ═══════════════════════════════════════════════════════
      ARRANQUE
      ═══════════════════════════════════════════════════════ */
-  canvas.addEventListener('click',    onClick);
-  canvas.addEventListener('touchend', onTouchEnd, { passive: true });
-  window.addEventListener('resize',   onResize);
-
   resize();
   createScene();
   animate(0);
 
-  return {
-    destroy: function () {
-      cancelAnimationFrame(animId);
-      canvas.removeEventListener('click',    onClick);
-      canvas.removeEventListener('touchend', onTouchEnd);
-      window.removeEventListener('resize',   onResize);
-    },
-    disperse: disperse,
-  };
+  return api;
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -583,6 +507,7 @@ function initParticleHero(canvasId, opts) {
     c.dataset.heroInit = '1';
     if (_inst && _inst.destroy) _inst.destroy();
     _inst = initParticleHero(ID);
+    window.__oParticleHero = _inst;
   }
 
   var obs = new MutationObserver(boot);
