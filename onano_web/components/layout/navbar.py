@@ -1,5 +1,5 @@
 import reflex as rx
-from ...styles.colors import BRAND_DARK_BLUE, BRAND_WHITE, BRAND_TEXT_DARK
+from ...styles.colors import *
 from ...styles.fonts import STYLE_BODY, STYLE_CTA
 
 def navbar_link(text: str, url: str) -> rx.Component:
@@ -15,7 +15,7 @@ def navbar() -> rx.Component:
         rx.hstack(
             # Logo
             rx.link(
-                rx.image(src="/logotipo-onano.svg", height="2.5em"),
+                rx.image(src="/isologo-dark.svg", height="2.5em"),
                 href="/",
             ),
             rx.spacer(),
@@ -33,30 +33,27 @@ def navbar() -> rx.Component:
             rx.link(
                 rx.button(
                     "Iniciar Sesión",
-                    bg=BRAND_DARK_BLUE,
-                    color=BRAND_WHITE,
+                    color=BRAND_LIGHT_BLUE,
                     radius="full",
                     style=STYLE_CTA,
                     size="3",
                     padding_x="1.5em",
                 ),
-                href="https://office.onanoglobal.com", # External link placeholder
+                href="https://my.onanoglobal.com", # External link placeholder
                 is_external=True,
                 display=["none", "none", "flex", "flex"],
             ),
             # Mobile Menu Trigger (Hamburger - Implementation pending state logic)
-            rx.icon("menu", color=BRAND_DARK_BLUE, display=["flex", "flex", "none", "none"]),
+            rx.icon("menu", color=BRAND_LIGHT_BLUE, display=["flex", "flex", "none", "none"]),
             
             width="100%",
             align_items="center",
             padding_x=["1em", "2em", "4em"],
             padding_y="1em",
         ),
-        position="sticky",
+        position="fixed",
         top="0",
         z_index="999",
-        background="rgba(255, 255, 255, 0.95)",
         backdrop_filter="blur(10px)",
-        border_bottom=f"1px solid {BRAND_DARK_BLUE}1A", # 10% opacity
         width="100%",
     )

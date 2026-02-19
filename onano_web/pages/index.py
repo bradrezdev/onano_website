@@ -1,102 +1,88 @@
 import reflex as rx
-from ..components.ui import liquid_background, blur_overlay, logo, simulation_card
 from ..components.layout.navbar import navbar
 from ..components.layout.footer import footer
-from ..styles.colors import BRAND_LIGHT_BLUE, BRAND_DARK_BLUE, BRAND_WHITE, BRAND_GRAY_100
-from ..styles.fonts import STYLE_H1, STYLE_H2, STYLE_BODY, STYLE_DISPLAY
+from ..components.ui import spline, SPLINE_SCENE
+from ..styles.colors import (
+    BRAND_LIGHT_BLUE,
+    BRAND_DARK_BLUE,
+    BRAND_WHITE,
+    BRAND_RADIAL_GRADIENT,
+)
+from ..styles.fonts import STYLE_H1, STYLE_DISPLAY, STYLE_BODY, STYLE_CTA
+
 
 def hero_section() -> rx.Component:
-    """Sección Hero Corporativo con fondo líquido."""
+    """Sección Hero con Spline 3D interactivo y contenido centrado."""
     return rx.box(
-        liquid_background(),
-        blur_overlay(),
-        rx.vstack(
-            rx.heading(
-                "Innovación Cuántica para tu Bienestar", 
-                style=STYLE_DISPLAY,
-                color=BRAND_WHITE,
-                text_align="center",
-            ),
-            rx.text(
-                "Descubre la nanotecnología que está revolucionando la salud y la libertad financiera.",
-                style=STYLE_H2,
-                color=BRAND_LIGHT_BLUE,
-                text_align="center",
-                max_width="600px",
-            ),
-            rx.spacer(height="2em"),
-            simulation_card(),
-            
-            align="center",
-            justify="center",
-            height="100%",
+        # Fondo con Spline 3D
+        rx.box(
+            spline(scene=SPLINE_SCENE),
+            position="absolute",
+            top="0",
+            left="0",
             width="100%",
-            spacing="5",
-            z_index=2,
-            padding_x="1em",
+            height="100%",
+            z_index="1",
+        ),
+        # Overlay degradado radial
+        rx.box(
+            position="absolute",
+            top="0",
+            left="0",
+            width="100%",
+            height="100%",
+            background=BRAND_RADIAL_GRADIENT,
+            opacity="0.3",
+            z_index="2",
+        ),
+        # Contenido centrado
+        rx.center(
+            rx.vstack(
+                rx.heading(
+                    "Mejorando invisible, transformando",
+                    style=STYLE_DISPLAY,
+                    color=BRAND_WHITE,
+                    text_align="center",
+                    margin_bottom="120px",
+                    width="100%",
+                ),
+                rx.button(
+                    "Conoce Más",
+                    size="3",
+                    radius="full",
+                    bg=BRAND_WHITE,
+                    color=BRAND_DARK_BLUE,
+                    style=STYLE_CTA,
+                    padding_x="2em",
+                    padding_y="1em",
+                    box_shadow="0 10px 30px rgba(0, 0, 0, 0.3)",
+                    _hover={
+                        "transform": "scale(1.05)",
+                        "box_shadow": "0 15px 40px rgba(0, 0, 0, 0.4)",
+                    },
+                    transition="all 0.3s ease",
+                    cursor="pointer",
+                ),
+                align="center",
+                z_index="3",
+                padding_x="1em",
+            ),
+            width="100%",
+            height="100%",
+            z_index="3",
         ),
         position="relative",
-        height="100vh",
         width="100%",
-        display="flex",
-        align_items="center",
-        justify_content="center",
+        height="120dvh",
         overflow="hidden",
     )
 
-def science_section() -> rx.Component:
-    return rx.box(
-        rx.vstack(
-            rx.heading("Ciencia Aplicada", style=STYLE_H1, color=BRAND_DARK_BLUE),
-            rx.text(
-                "Nuestra tecnología se basa en principios de física cuántica y nanotecnología avanzada...",
-                style=STYLE_BODY,
-                color="black",
-            ),
-            align="center",
-            spacing="4",
-            padding="4em 2em",
-            max_width="1200px",
-            margin="0 auto",
-        ),
-        bg=BRAND_GRAY_100,
-        width="100%",
-    )
-
-def values_section() -> rx.Component:
-    return rx.box(
-        rx.vstack(
-            rx.heading("Nuestros Valores", style=STYLE_H1, color=BRAND_DARK_BLUE),
-            rx.text("Innovación • Integridad • Comunidad", style=STYLE_BODY),
-            align="center",
-            spacing="4",
-            padding="4em 2em",
-        ),
-        width="100%",
-        bg=BRAND_WHITE,
-    )
-
-def products_preview_section() -> rx.Component:
-    return rx.box(
-        rx.vstack(
-            rx.heading("Productos Destacados", style=STYLE_H1, color=BRAND_DARK_BLUE),
-            rx.text("Próximamente...", style=STYLE_BODY),
-            align="center",
-            spacing="4",
-            padding="4em 2em",
-        ),
-        width="100%",
-        bg=BRAND_GRAY_100,
-    )
 
 def index() -> rx.Component:
-    """Página de inicio (Landing Page) según Sitemap."""
+    """Página de inicio redesñada con Spline 3D."""
     return rx.box(
         navbar(),
         hero_section(),
-        science_section(),
-        values_section(),
-        products_preview_section(),
         footer(),
         width="100%",
     )

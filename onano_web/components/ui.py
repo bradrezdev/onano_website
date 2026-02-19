@@ -1,6 +1,24 @@
 import reflex as rx
 from ..styles.colors import BRAND_DARK_BLUE, BRAND_LIGHT_BLUE, BRAND_GRADIENT
 
+
+# --- SPLINE COMPONENT --- #
+class Spline(rx.Component):
+    """Componente para renderizar escenas 3D de Spline."""
+    library = "@splinetool/react-spline"
+    lib_dependencies: list[str] = ["@splinetool/runtime@1.5.5"]
+    tag = "Spline"
+    is_default = True
+    scene: rx.Var[str]
+
+
+spline = Spline.create
+
+
+# --- CONSTANTS --- #
+SPLINE_SCENE = "https://prod.spline.design/1eapv4LnOygEqB66/scene.splinecode"
+
+
 def logo() -> rx.Component:
     """ONANO logo con tamaño responsivo."""
     return rx.image(

@@ -40,3 +40,4 @@ BRAND_GRAY_500 = "#FCFCFC"
 # Degradado oficial para botones y acentos llamativos (Ajustado con los colores oficiales)
 # NOTA: Ajustamos el ángulo y los colores para coincidir mejor con la identidad visual
 BRAND_GRADIENT = f"linear-gradient(180deg, {BRAND_LIGHT_BLUE} 0%, {BRAND_DARK_BLUE} 100%)"
+BRAND_RADIAL_GRADIENT = f"radial-gradient(circle, {BRAND_LIGHT_BLUE} 0%, {BRAND_DARK_BLUE} 100%)"
