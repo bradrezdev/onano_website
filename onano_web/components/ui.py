@@ -2,33 +2,72 @@ import reflex as rx
 from ..styles.colors import BRAND_DARK_BLUE, BRAND_LIGHT_BLUE, BRAND_GRADIENT
 
 
-# --- SPLINE COMPONENT --- #
-class Spline(rx.Component):
-    """Componente para renderizar escenas 3D de Spline."""
-    library = "@splinetool/react-spline"
-    lib_dependencies: list[str] = ["@splinetool/runtime@1.5.5"]
-    tag = "Spline"
-    is_default = True
-    scene: rx.Var[str]
-
-
-spline = Spline.create
-
-
-# --- CONSTANTS --- #
-SPLINE_SCENE = "https://prod.spline.design/1eapv4LnOygEqB66/scene.splinecode"
-
-
-def logo() -> rx.Component:
-    """ONANO logo con tamaño responsivo."""
-    return rx.image(
-        src="isologo-dark.svg",
-        #src="logotipo-onano.svg",
-        alt="ONANO Logo",
-        # Tamaño responsivo: más pequeño en móvil (50%), controlado en escritorio (25em)
-        width=["60%", "40%", "25em"], 
-        padding_bottom="1em",
+def molecule_background() -> rx.Component:
+    """
+    Fondo interactivo de moléculas nanotecnológicas (Canvas + JS).
+    Reemplaza a Spline — más ligero, configurable y on-brand.
+    El script es auto-inicializable (MutationObserver + polling).
+    """
+    return rx.box(
+        rx.el.canvas(
+            id="molecule-canvas",
+            style={
+                "display": "block",
+                "width": "100%",
+                "height": "100%",
+            },
+        ),
+        rx.script(src="/scripts/molecule_field.js"),
+        position="absolute",
+        top="0",
+        left="0",
+        width="100%",
+        height="100%",
+        z_index="0",
+        style={"pointer_events": "none"},
     )
+
+
+class Isologo:
+    @staticmethod
+    def light() -> rx.Component:
+        """ONANO logo con tamaño responsivo."""
+        return rx.image(
+            src="isologo-light.svg",
+            #src="logotipo-onano.svg",
+            alt="ONANO Logo",
+            # Tamaño responsivo: más pequeño en móvil (3.5em), controlado en escritorio (25em)
+            height=["3.5em", "40%", "25em"], 
+            padding_bottom="1em",
+        )
+
+    @staticmethod
+    def dark() -> rx.Component:
+        return rx.image(
+            src="isologo-dark.svg",
+            alt="ONANO Logo",
+            height=["3.5em", "40%", "25em"],
+            padding_bottom="1em",
+        )
+
+class Isotipo:
+    @staticmethod
+    def light() -> rx.Component:
+        return rx.image(
+            src="isotipo-light.svg",
+            alt="ONANO Isotipo",
+            height=["10em", "40%", "25em"],
+            padding_bottom="1em",
+        )
+    
+    @staticmethod
+    def dark() -> rx.Component:
+        return rx.image(
+            src="isotipo-dark.svg",
+            alt="ONANO Isotipo",
+            height=["3.5em", "40%", "25em"],
+            padding_bottom="1em",
+        )
 
 def simulation_card() -> rx.Component:
     """Tarjeta destacada para invitar a la simulación."""
