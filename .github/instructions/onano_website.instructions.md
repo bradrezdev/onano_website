@@ -53,6 +53,27 @@ Ante una solicitud del usuario:
 *   **Manejo de Errores:** Nunca dejes un `except: pass`. Maneja los errores y muestra feedback al usuario.
 *   **Seguridad:** Valida inputs, protege rutas privadas y asegura los datos de usuario.
 
+### 5. Entorno Virtual y Ejecución
+*   **Entorno Virtual:** El proyecto utiliza un entorno virtual Python ubicado en `.venv/`
+*   **Activación:** Para activar el entorno: `source .venv/bin/activate`
+*   **Comando de ejecución:** `reflex run` (debe ejecutarse con el entorno activado)
+
+### 6. Verificación Obligatoria de Compilación (CRÍTICO)
+**NUNCA** des por terminada una tarea hasta que se cumplan TODAS estas condiciones:
+
+1.  **Compilación exitosa:** Ejecuta `reflex run` y verifica que la aplicación compila sin errores.
+2.  **Monitoreo activo de terminal:** Revisa constantemente la salida de la terminal durante todo el desarrollo.
+3.  **Resolución de errores:** Si encuentras algún error (ImportError, TypeError, SyntaxError, etc.), debes solucionarlo INMEDIATAMENTE antes de continuar.
+4.  **Confirmación final:** Antes de reportar una tarea como completada, asegúrate de que:
+    *   ✅ No hay tracebacks en la terminal
+    *   ✅ La aplicación levanta correctamente
+    *   ✅ No hay warnings críticos
+5.  **Detener Reflex (OBLIGATORIO):** Una vez verificado que todo funciona al 100%, **SIEMPRE** detén el servidor de Reflex ejecutando:
+    *   `pkill -f reflex` o `Ctrl+C` en la terminal donde corre Reflex
+    *   Esto evita procesos huérfanos y conflictos de puertos en futuras ejecuciones
+
+**Responsabilidad de Adrian:** Es tu deber como QA verificar estos puntos antes de aprobar cualquier entrega.
+
 ---
 
 ## 🚀 Inicio de Tarea

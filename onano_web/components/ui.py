@@ -1,16 +1,76 @@
 import reflex as rx
 from ..styles.colors import BRAND_DARK_BLUE, BRAND_LIGHT_BLUE, BRAND_GRADIENT
 
-def logo() -> rx.Component:
-    """ONANO logo con tamaño responsivo."""
-    return rx.image(
-        src="isologo-dark.svg",
-        #src="logotipo-onano.svg",
-        alt="ONANO Logo",
-        # Tamaño responsivo: más pequeño en móvil (50%), controlado en escritorio (25em)
-        width=["60%", "40%", "25em"], 
-        padding_bottom="1em",
+
+def particle_hero_bg() -> rx.Component:
+    """
+    Fondo interactivo de nanopartículas — controlado por scroll.
+    Canvas position:fixed → persiste en viewport sin remontarse.
+    pointer_events:none → el scroll controla las partículas, no el click.
+    """
+    return rx.box(
+        rx.el.canvas(
+            id="particle-hero-canvas",
+            style={
+                "display": "block",
+                "width": "100%",
+                "height": "100%",
+            },
+        ),
+        # Particle physics engine
+        rx.script(src="/scripts/particle_hero.js"),
+        # Scroll timeline controller
+        rx.script(src="/scripts/scroll_timeline.js"),
+        position="fixed",
+        top="-64px",
+        left="0",
+        width="100vw",
+        height="100dvh",
+        z_index="0",
+        pointer_events="none",
     )
+
+
+class Isologo:
+    @staticmethod
+    def light() -> rx.Component:
+        """ONANO logo con tamaño responsivo."""
+        return rx.image(
+            src="isologo-light.svg",
+            #src="logotipo-onano.svg",
+            alt="ONANO Logo",
+            # Tamaño responsivo: más pequeño en móvil (3.5em), controlado en escritorio (25em)
+            height=["3.5em", "40%", "25em"], 
+            padding_bottom="1em",
+        )
+
+    @staticmethod
+    def dark() -> rx.Component:
+        return rx.image(
+            src="isologo-dark.svg",
+            alt="ONANO Logo",
+            height=["3.5em", "40%", "25em"],
+            padding_bottom="1em",
+        )
+
+class Isotipo:
+    @staticmethod
+    def light() -> rx.Component:
+        return rx.image(
+            src="isotipo-light.svg",
+            alt="ONANO Isotipo",
+            height=["10em", "40%", "25em"],
+            padding_bottom="1em",
+        )
+    
+    @staticmethod
+    def dark() -> rx.Component:
+        return rx.image(
+            src="isotipo-dark.svg",
+            alt="ONANO Isotipo",
+            height=["3.5em", "40%", "25em"],
+            padding_bottom="1em",
+        )
 
 def simulation_card() -> rx.Component:
     """Tarjeta destacada para invitar a la simulación."""

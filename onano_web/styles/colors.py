@@ -36,7 +36,16 @@ BRAND_GRAY_300 = "#F6F6F6"
 BRAND_GRAY_400 = "#F9F9F9"
 BRAND_GRAY_500 = "#FCFCFC"
 
+# --- FONDOS OSCUROS (HERO / DARK SECTIONS) ---
+BRAND_HERO_BG = "#070D1A"          # Near-black navy para secciones hero
+
 # --- DEGRADADOS ---
 # Degradado oficial para botones y acentos llamativos (Ajustado con los colores oficiales)
 # NOTA: Ajustamos el ángulo y los colores para coincidir mejor con la identidad visual
 BRAND_GRADIENT = f"linear-gradient(180deg, {BRAND_LIGHT_BLUE} 0%, {BRAND_DARK_BLUE} 100%)"
+BRAND_RADIAL_GRADIENT = f"radial-gradient(circle, {BRAND_LIGHT_BLUE} 0%, {BRAND_DARK_BLUE} 100%)"
+
+### Degradados adicionales
+
+## Dragradado de ázul light, blanco, azul dark y finaliza con azul light con 45 grados
+BRAND_GRADIENT_45 = f"linear-gradient(45deg, {BRAND_LIGHT_BLUE} 0%, {BRAND_WHITE} 25%, {BRAND_DARK_BLUE} 75%, {BRAND_LIGHT_BLUE} 100%)"
