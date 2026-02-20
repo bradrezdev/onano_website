@@ -203,9 +203,10 @@ function initParticleHero(canvasId, opts) {
     var sp = scrollProgress;
 
     /* Fases del scroll (0→1) */
+    /* Modificado: "Early Completion" para dar ~15vh (5%) de margen al final */
     var p1 = smoothStep(clamp(sp / 0.33, 0, 1));           // vibración
     var p2 = smoothStep(clamp((sp - 0.33) / 0.33, 0, 1));  // dispersión
-    encapProgress = smoothStep(clamp((sp - 0.66) / 0.34, 0, 1)); // encapsulación
+    encapProgress = smoothStep(clamp((sp - 0.66) / 0.29, 0, 1)); // encapsulación (termina en 0.95)
 
     var vibMul = 1 + p1 * 2.6;  // vibración hasta 3.6× en pico
 
