@@ -109,7 +109,7 @@ def slide_hero() -> rx.Component:
                     text_align="center",
                 ),
                 align="center",
-                spacing="1",
+                spacing="0",
                 max_width="640px",
             ),
             # ── CTA glow — solo el wrapper necesita CSS (conic-gradient)
@@ -194,7 +194,7 @@ def _science_slide(
                 ),
                 nav_row,
                 align="start",
-                spacing="4",
+                spacing="0",
                 max_width="600px",
             ),
             align="end",
@@ -367,8 +367,8 @@ def _valor_card(nombre: str, descripcion: str) -> rx.Component:
         padding_x=["1.25em", "1.5em"],
         padding_y=["1.25em", "1.5em"],
         background=BRAND_WHITE,
-        border_radius="16px",
-        border=f"1px solid {BRAND_BORDER_SOFT}",
+        #border_radius="16px",
+        #border=f"1px solid {BRAND_BORDER_SOFT}",
         min_height="160px",
     )
 
@@ -389,11 +389,9 @@ def valores_section() -> rx.Component:
             # Header del bloque
             rx.vstack(
                 rx.text(
-                    "Fundamentos de marca",
+                    "SOMOS ONANO",
                     style=STYLE_LABEL,
                     color=BRAND_SECONDARY_100,
-                    letter_spacing="0.08em",
-                    text_transform="uppercase",
                 ),
                 rx.heading(
                     "Valores institucionales",
@@ -411,7 +409,7 @@ def valores_section() -> rx.Component:
                     opacity="0.85",
                 ),
                 align="start",
-                spacing="3",
+                spacing="0",
                 width="100%",
             ),
             # Grid de valores — 1 col mobile → 2 col tablet → 3 col desktop
@@ -423,18 +421,156 @@ def valores_section() -> rx.Component:
                 margin_top="2.5em",
             ),
             # Container inner: border-radius 24px per Design System
-            background=BRAND_WHITE,
-            border_radius="24px",
-            padding_x=["1.5em", "2em", "3em", "3.5em", "4em"],
-            padding_y=["2em", "2.5em", "3em", "3em", "3.5em"],
-            box_shadow="0 2px 32px rgba(6, 42, 99, 0.07)",
             width="100%",
             max_width="1200px",
             margin="0 auto",
+            margin_top=["32px", "2em", "3em", "4em", "5em"], # responsive margin-top [mobile, sm, md, lg, xl]
         ),
+        position="relative",
+        z_index="10",
         id="valores",
         width="100%",
-        background=BRAND_BACKGROUND_ALT,
+        background=BRAND_WHITE,
+        padding_y=["3em", "3.5em", "4.5em"],
+        padding_x=["1em", "1.5em", "2em", "2em", "3em"],
+    )
+
+
+# ── Sección: Productos ──────────────────────────
+# Agente: Bryan (UI) + Adrian (QA Design System)
+# Slider horizontal con cards de productos (nombre + descripción breve + botón para más información).
+# Fondo neutro BRAND_BACKGROUND_ALT — sin gradientes, sin animaciones.
+# Design System:
+#   - Contenedor inner: border-radius 24px (h > 48px, regla oficial)
+#   - Encabezados: BRAND_DARK_BLUE (#062A63)
+#   - Cuerpo: BRAND_TEXT_DARK (#383A3F)
+#   - Acento: BRAND_SECONDARY_100 (#0CBCE5)
+#   - Fondo sección: BRAND_BACKGROUND_ALT (#F2F4F9)
+# Fuente: productos_ONANO.md
+
+_PRODUCTOS = [
+    (
+        "Producto 1",
+        "Descripción breve del producto 1. Destaca su innovación y beneficio principal sin entrar en detalles técnicos.",
+    ),
+    (
+        "Producto 2",
+        "Descripción breve del producto 2. Enfócate en el valor que aporta al usuario final, manteniendo un tono aspiracional.",
+    ),
+    (
+        "Producto 3",
+        "Descripción breve del producto 3. Resalta su diferencia clave y cómo mejora la experiencia del cliente.",
+    ),
+    (
+        "Producto 4",
+        "Descripción breve del producto 4. Destaca su innovación y beneficio principal sin entrar en detalles técnicos.",
+    ),
+]
+
+
+def _product_card(nombre: str, descripcion: str) -> rx.Component:
+    """
+    Tarjeta individual de producto.
+    h > 48px → border-radius: 16px per Design System (escala de cards).
+    Fondo blanco sobre BRAND_BACKGROUND_ALT — contraste sutil.
+    """
+    return rx.box(
+        rx.vstack(
+            # Acento visual — barra corta BRAND_SECONDARY_100
+            rx.vstack(
+                rx.heading(
+                    nombre,
+                    as_="h3",
+                    style=STYLE_H3,
+                    color=BRAND_DARK_BLUE,
+                ),
+                rx.image(
+                    src="placeholder-producto.svg",
+                    alt=f"Imagen de {nombre}",
+                    width="100%",
+                    border_radius="24px",
+                ),
+                rx.text(
+                    descripcion,
+                    style=STYLE_BODY,
+                    color=BRAND_TEXT_DARK,
+                    opacity="0.82",
+                ),
+            ),
+            rx.button(
+                "Más información",
+                variant="outline",
+                color_scheme="blue",
+                size="2",
+                radius="full",
+                _hover={"bg": f"{BRAND_LIGHT_BLUE}12", "border_color": BRAND_SECONDARY_80},
+            ),
+            height="100%",
+            align="start",
+            justify="between",
+        ),
+        padding_x=["1.25em", "1.5em"],
+        padding_y=["1.25em", "1.5em"],
+        background=BRAND_WHITE,
+        border_radius="24px",
+        border=f"1px solid {BRAND_BORDER_SOFT}",
+        min_height="160px",
+        margin_bottom="1em",
+    )
+
+
+def products_section() -> rx.Component:
+    """
+    Sección Productos — página Inicio (sitemap_ONANO.md).
+
+    Objetivo UX: "reset" visual limpio que permita al usuario respirar
+    después de la estimulación del hero scroll-driven de partículas.
+    Estética: premium, elegante, respirable. Solo texto. Sin claims técnicos.
+
+    Content source: productos_ONANO.md + brief_estrategico_ONANO.md
+    """
+    return rx.box(
+        # ── Inner card — border-radius 24px per Design System ──
+        rx.box(
+            # Header del bloque
+            rx.vstack(
+                rx.text(
+                    "PRODUCTOS",
+                    style=STYLE_LABEL,
+                    color=BRAND_SECONDARY_100,
+                ),
+                rx.heading(
+                    "Innovación real con nanotecnología certificada",
+                    as_="h2",
+                    style=STYLE_H1,
+                    color=BRAND_DARK_BLUE,
+                ),
+                align="start",
+                spacing="0",
+                width="100%",
+            ),
+            # Grid de productos — 1 col mobile → 2 col tablet → 3 col desktop
+            rx.scroll_area(
+                rx.grid(
+                    *[_product_card(n, d) for n, d in _PRODUCTOS],
+                    columns=rx.breakpoints(initial="4", sm="1", md="2", lg="2", xl="3"),
+                    spacing="4",
+                    width="240%",
+                    margin_top="2.5em",
+                ),
+                direction="horizontal",
+                width="100%",
+            ),
+            # Container inner: border-radius 24px per Design System
+            width="100%",
+            margin="0 auto",
+            margin_top=["32px", "2em", "3em", "4em", "5em"], # responsive margin-top [mobile, sm, md, lg, xl]
+        ),
+        position="relative",
+        z_index="10",
+        id="productos",
+        width="100%",
+        background=BRAND_WHITE,
         padding_y=["3em", "3.5em", "4.5em"],
         padding_x=["1em", "1.5em", "2em", "2em", "3em"],
     )
@@ -446,6 +582,7 @@ def index() -> rx.Component:
         navbar(),
         hero_scroll_root(),
         valores_section(),
+        products_section(),
         footer(),
         width="100%",
     )

@@ -7,6 +7,14 @@ applyTo: "*.*"
 ## 🎯 Objetivo del Proyecto
 Desarrollar un panel de control y sitio web de negocios para **ONANO** (Multinivel/E-commerce), utilizando **Reflex (Frontend/Fullstack)**, **Python (Backend)** y **Supabase (Base de Datos)**. El sistema debe ser robusto, escalable y visualmente impactante, siguiendo la filosofía "Mobile First".
 
+## 📌 Repositorio Oficial
+
+**GitHub Repo**: https://github.com/bradrezdev/onano_website.git  
+**Local Path**: `/Users/bradrez/Documents/bradrez_projects/onano/onano-web`  
+**Branch Principal**: `main`
+
+⚠️ **IMPORTANTE**: Todos los commits deben hacerse contra **`bradrezdev/onano_website`**, NO crear nuevos repos.
+
 ---
 
 ## 🤖 El equipo de Agentes (La Tríada)
@@ -74,7 +82,159 @@ Ante una solicitud del usuario:
 
 **Responsabilidad de Adrian:** Es tu deber como QA verificar estos puntos antes de aprobar cualquier entrega.
 
+### 7. Documentación en Issues (CRÍTICO — Nueva Regla)
+
+**TODOS los cambios significativos DEBEN estar documentados en GitHub Issues.**  
+Esto asegura trazabilidad, colaboración y que nada se pierda.
+
+#### Flujo de Documentación Obligatorio
+
+1. **Antes de comenzar**, verifica si existe un issue relacionado:
+   - Busca en [`Issues`](https://github.com/bradrezdev/onano_website/issues)
+   - Si existe, comenta tu progreso en el issue existente
+   - Si NO existe, **crea un nuevo issue** con título descriptivo
+
+2. **Durante el desarrollo**, documenta en el issue:
+   - Qué cambios estás haciendo (lista de archivos modificados)
+   - Por qué lo haces (root cause, design decision)
+   - Blockers o decisiones que requieren feedback
+
+3. **Al completar**, actualiza el issue final con:
+   - ✅ Cambios implementados (lista)
+   - 📊 QA Results (compilación, tests, capturas si aplica)
+   - 🔗 Links a commits o PRs relacionados
+   - 🚀 Ready for merge (marcar si está listo)
+
+#### Tipos de Issues Recomendados
+
+| Label | Descripción | Creador |
+|-------|-------------|---------|
+| `feature` | Feature nueva (Hero, Ciencia, E-commerce) | Cualquiera |
+| `bug` | Bug encontrado + fix (snap cascade, dead zones) | Cualquiera |
+| `refactor` | Mejora de código (DRY, KISS, components) | Adrian |
+| `docs` | Documentación, CHANGELOG, instrucciones | Adrian |
+| `chore` | Limpieza, dependencies, setup | Adrian |
+
+#### Ejemplo de Issue Bien Documentado
+
+```markdown
+## [HERO] Scroll fixes + DRY refactor
+
+### Descripción
+Se han corregido 4 bugs en el sistema scroll-driven del HERO:
+- Bug #3: CTA skip slide-1
+- Bug #4: Dead zone click
+- Bug #5: Back button slide-2
+- Bug #6: Scroll-up no ancla hero
+
+### Cambios
+- ✅ `onano_web/components/buttons.py` (NEW)
+- ✅ `onano_web/pages/index.py` (refactor)
+- ✅ `assets/scripts/scroll_timeline.js` (4 bug fixes)
+
+### QA
+- ✅ 21/21 compilación exitosa
+- ✅ Sin tracebacks
+- ✅ Procesos limpios
+
+### Status
+🎯 READY FOR MERGE
+```
+
+#### Herramientas CLI para Gestionar Issues
+
+```bash
+# Ver issues abiertos
+gh issue list --label feature
+
+# Crear issue desde CLI
+gh issue create --title "[HERO] Bug fix" --body "Descripción..." --label bug
+
+# Comentar en issue (ej: issue #5)
+gh issue comment 5 --body "Progreso: completado 60%"
+
+# Marcar issue como resuelto
+gh issue close 5
+```
+
+**Responsabilidad de Adrian**: Asegurar que TODOS los issues estén actualizados y cerrados apropiadamente.
+
+### 8. Gestión de Branches por Página
+
+**Cada página debe tener su propia rama (branch) de desarrollo.**
+
+#### Estructura de Branches
+
+Las páginas están documentadas en [`sitemap_ONANO.md`](sitemap_ONANO.md):
+
+| Página | Branch Name | Status |
+|--------|------------|--------|
+| Inicio | `page/index` | ✅ IN PROGRESS |
+| Quiénes somos | `page/about` | ⏳ PENDING |
+| Productos | `page/products` | ⏳ PENDING |
+| Contacto | `page/contact` | ⏳ PENDING |
+
+#### Flujo de Branches
+
+1. **Crear branch para página nueva:**
+   ```bash
+   git checkout -b page/nombre-pagina
+   ```
+   
+2. **Nombrar según sitemap:**
+   - `page/index` → Inicio (Hero + Ciencia Applied)
+   - `page/about` → Quiénes somos (Origen, Perfil, Liderazgo, Compromiso)
+   - `page/products` → Productos (Hero slider, Portfolio)
+   - `page/contact` → Contacto (Formulario, Datos, Email)
+
+3. **Desarrollo:**
+   - Crear archivo `onano_web/pages/nombre_pagina.py`
+   - Crear issue relacionado documentando avance
+   - Comentar en issue con actualizaciones
+   - Verificar compilación (21/21) antes de merge
+
+4. **Merge:**
+   - Cuando la página esté completa, crear PR hacia `main`
+   - Referenciar issue en descripción del PR
+   - Solicitar review de Adrian (QA)
+   - Mergear con `Squash and merge` (limpia el historial)
+
+#### Ejemplo: Desarrollo de página "Sobre Nosotros"
+
+```bash
+# Step 1: Crear branch
+git checkout -b page/about
+
+# Step 2: Crear issue en GitHub
+# Título: "[PAGE] About: Origen, Perfil, Liderazgo, Compromiso científico"
+
+# Step 3: Desarrollar
+# - Crear `onano_web/pages/about.py`
+# - Implementar secciones
+
+# Step 4: Verificar
+# reflex run → 21/21 ✅
+
+# Step 5: Commit
+git add .
+git commit -m "feat: page/about - Sección Origen + Perfil corporativo"
+
+# Step 6: Push y PR
+git push origin page/about
+# Crear PR en GitHub → Referenciar issue #X
+
+# Step 7: Merge (después de review)
+```
+
+**Responsabilidad de Adrian**: Coordinar branches, revisar PRs y garantizar merge ordenado.
+
 ---
 
 ## 🚀 Inicio de Tarea
 Al recibir una instrucción, tu respuesta debe reflejar implícita o explícitamente que has consultado los archivos de contexto (`design_system`, `valores`, `sitemap`) y que los tres agentes (Bryan, Jazmin, Adrian) están alineados para ejecutar la solución.
+
+**ADEMÁS**: 
+1. ✅ Verifica si existe un issue relacionado (busca en https://github.com/bradrezdev/onano_website/issues)
+2. ✅ Si no existe, **crea un issue nuevo** describiendo la tarea
+3. ✅ Durante el desarrollo, comenta en el issue con actualizaciones de progreso
+4. ✅ Al terminar, completa el issue con checklist final (QA, compilación, archivos modificados)

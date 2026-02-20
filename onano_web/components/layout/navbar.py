@@ -54,7 +54,7 @@ def navbar() -> rx.Component:
                 display=["none", "none", "flex", "flex"],
             ),
             # Mobile Menu Trigger
-            rx.icon("menu", color=BRAND_DARK_BLUE, display=["flex", "flex", "none", "none"]),
+            rx.icon("menu", color=BRAND_SECONDARY_20, display=["flex", "flex", "none", "none"]),
             
             width="100%",
             align_items="center",
@@ -62,18 +62,16 @@ def navbar() -> rx.Component:
         ),
         # Wrapper "Pildora"
         position="fixed",
-        top="10px",
+        top="16px",
         left="50%",
         transform="translateX(-50%)", # Centrado absoluto
         width="calc(100% - 20px)",     # Padding 10px a cada lado (total 20px)
         max_width="1200px",            # Límite para pantallas muy anchas
         height="64px",                 # Altura fija tipo botón estándar
         padding_x="1.5em",
-        
         # Estilo Visual Pildora
-        background="rgba(255, 255, 255, 0.85)", # Fondo semi-transparente
-        backdrop_filter="blur(16px)",           # Blur intenso
-        border="1px solid rgba(255,255,255,0.4)",
+        background=NAVBAR_BG,                      # Fondo blanco con opacidad
+        backdrop_filter="blur(4px)",           # Blur intenso para efecto glassmorphism
         border_radius="9999px",                 # Pildora completa
         box_shadow="0 4px 24px rgba(0,0,0,0.06)",
         z_index="999",

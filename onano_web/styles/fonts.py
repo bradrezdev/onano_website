@@ -82,7 +82,7 @@ STYLE_LABEL = {
     "font_size": SIZE_LABEL,
     "font_weight": WEIGHT_MEDIUM,
     "letter_spacing": KERNING_WIDE,
-    "text_transform": "uppercase",
+    #"text_transform": "uppercase",
 }
 
 STYLE_MICRO = {

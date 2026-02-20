@@ -39,9 +39,8 @@ class Isologo:
             src="isologo-light.svg",
             #src="logotipo-onano.svg",
             alt="ONANO Logo",
-            # Tamaño responsivo: más pequeño en móvil (3.5em), controlado en escritorio (25em)
-            height=["3.5em", "40%", "25em"], 
-            padding_bottom="1em",
+            # Tamaño responsivo: más pequeño en móvil (2em), controlado en escritorio (25em)
+            height=["2em", "40%", "25em"], 
         )
 
     @staticmethod
@@ -49,8 +48,7 @@ class Isologo:
         return rx.image(
             src="isologo-dark.svg",
             alt="ONANO Logo",
-            height=["3.5em", "40%", "25em"],
-            padding_bottom="1em",
+            height=["2em", "40%", "25em"],
         )
 
 class Isotipo:

@@ -49,3 +49,6 @@ BRAND_RADIAL_GRADIENT = f"radial-gradient(circle, {BRAND_LIGHT_BLUE} 0%, {BRAND_
 
 ## Dragradado de ázul light, blanco, azul dark y finaliza con azul light con 45 grados
 BRAND_GRADIENT_45 = f"linear-gradient(45deg, {BRAND_LIGHT_BLUE} 0%, {BRAND_WHITE} 25%, {BRAND_DARK_BLUE} 75%, {BRAND_LIGHT_BLUE} 100%)"
+
+## Color de pildora navbar
+NAVBAR_BG = f"{BRAND_HERO_BG}66"  # Blanco con opacidad para fondo de navbar (60% opacity)
