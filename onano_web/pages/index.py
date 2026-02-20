@@ -1,14 +1,20 @@
 import reflex as rx
 
 from ..components.ui import particle_hero_bg
+from ..components.buttons import btn_nav
 from ..components.layout.navbar import navbar
 from ..components.layout.footer import footer
 from ..styles.colors import *
 from ..styles.fonts import *
 
 
-# ── CSS ────────────────────────────────────────────────────────
-# Glow rotativo CTA + will-change para GPU en slides
+# ── CSS ──────────────────────────────────────────────────────────────────────
+# Solo lo que Reflex NO puede hacer:
+#   - @property (custom property animada)
+#   - @keyframes
+#   - conic-gradient en .cta-glow-wrap (no hay equiv en Reflex)
+#   - will-change + transition en clases que JS manipula por nombre
+#   - pseudo-selector :hover para botones de nav
 _HERO_CSS = f"""
 @property --glow-angle {{
   syntax: "<angle>";
@@ -18,6 +24,7 @@ _HERO_CSS = f"""
 @keyframes spin-glow {{
   to {{ --glow-angle: 360deg; }}
 }}
+/* Wrapper del CTA — solo conic-gradient y animación */
 .cta-glow-wrap {{
   position: relative;
   display: inline-flex;
@@ -39,30 +46,24 @@ _HERO_CSS = f"""
 .cta-glow-wrap:hover {{
   filter: brightness(1.3) drop-shadow(0 0 14px rgba(12, 188, 229, 0.45));
 }}
-.cta-glow-inner {{
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 30px;
-  background: {BRAND_DARK_BLUE};
-  color: {BRAND_WHITE};
-  padding: 1em 2.5em;
-  font-family: 'Avenir Next', system-ui, sans-serif;
-  font-size: 17px;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  white-space: nowrap;
-}}
+/* Transición de slides — manipuladas por JS via class_name */
 .scroll-slide-0, .scroll-slide-1,
 .scroll-slide-2, .scroll-slide-3 {{
   will-change: opacity, transform;
-  pointer-events: none;
   transition: opacity 0.6s ease, transform 0.6s ease;
+  pointer-events: none;
+}}
+/* Hover de botones de navegación (pseudo-selector, no reemplazable en Reflex) */
+.btn-nav:hover {{
+  background: rgba(12, 188, 229, 0.12) !important;
+  border-color: {BRAND_SECONDARY_80} !important;
 }}
 """
 
 
 # ── Helpers ────────────────────────────────────────────────────
+
+# Nota: btn_nav() viene de ..components.buttons (DRY — Design System centralizado)
 
 def _slide_wrap(idx: int, content: rx.Component, initial_opacity: str = "0") -> rx.Component:
     """
@@ -111,11 +112,23 @@ def slide_hero() -> rx.Component:
                 spacing="1",
                 max_width="640px",
             ),
-            # CTA — pointer-events activados solo en este elemento
+            # ── CTA glow — solo el wrapper necesita CSS (conic-gradient)
+            # El botón interior es un componente Reflex nativo.
             rx.box(
-                rx.box(
+                rx.button(
                     "Conocer más",
-                    class_name="cta-glow-inner",
+                    style=STYLE_CTA,
+                    color=BRAND_WHITE,
+                    background=BRAND_DARK_BLUE,
+                    border="none",
+                    border_radius="32px",
+                    height="64px",
+                    padding_x="2.5em",
+                    cursor="pointer",
+                    white_space="nowrap",
+                    pointer_events="auto",
+                    letter_spacing="0.02em",
+                    _hover={"filter": "none"},  # el hover lo maneja .cta-glow-wrap
                 ),
                 class_name="cta-glow-wrap",
                 id="scroll-cta",
@@ -141,8 +154,20 @@ def _science_slide(
     tag: str,
     title: str,
     body: str,
+    show_next_btn: bool = False,
+    show_prev_btn: bool = False,
 ) -> rx.Component:
-    """Slide de narrativa científica alineada a la fase de partículas."""
+    """
+    Slide de narrativa científica alineada a la fase de partículas.
+    Botones prev/next con rx.icon (chevrons Lucide) y estilos Reflex nativos.
+    Design System — Botón Estándar: h 48px, border-radius 24px.
+    """
+    nav_row = rx.hstack(
+        btn_nav(f"slide-prev-{idx}", "chevron-left") if show_prev_btn else rx.fragment(),
+        btn_nav(f"slide-next-{idx}", "chevron-right") if show_next_btn else rx.fragment(),
+        spacing="3",
+    ) if (show_prev_btn or show_next_btn) else rx.fragment()
+
     return _slide_wrap(
         idx,
         rx.flex(
@@ -167,8 +192,9 @@ def _science_slide(
                     max_width="520px",
                     padding_top="0.5em",
                 ),
+                nav_row,
                 align="start",
-                spacing="1",
+                spacing="4",
                 max_width="600px",
             ),
             align="end",
@@ -210,7 +236,7 @@ def hero_scroll_root() -> rx.Component:
             slide_hero(),
             _science_slide(
                 1,
-                "Estado Aglomerado",
+                "Aglomeración",
                 "Máxima concentración bioactiva",
                 (
                     "Las nanopartículas se organizan en estructuras compactas "
@@ -218,10 +244,12 @@ def hero_scroll_root() -> rx.Component:
                     "estabilidad química y concentración óptima de principios "
                     "activos antes de la liberación terapéutica."
                 ),
+                show_next_btn=True,
+                show_prev_btn=False,
             ),
             _science_slide(
                 2,
-                "Dispersión Controlada",
+                "Dispersión",
                 "Liberación en sub-clústeres nanométricos",
                 (
                     "Bajo condiciones fisiológicas específicas, los agregados "
@@ -229,17 +257,21 @@ def hero_scroll_root() -> rx.Component:
                     "proceso incrementa la superficie activa de contacto celular "
                     "hasta 300 veces, optimizando la biodisponibilidad."
                 ),
+                show_next_btn=True,
+                show_prev_btn=True,
             ),
             _science_slide(
                 3,
-                "Estabilización Nanométrica",
-                "Encapsulación de nueva generación",
+                "Nanoencapsulación",
+                "Recubierta de nueva generación",
                 (
                     "Cada sub-aglomeración queda recubierta por una capa "
                     "protectora nanométrica de precisión: biodisponibilidad "
                     "sostenida, protección contra degradación enzimática y "
                     "liberación programada en el sitio terapéutico."
                 ),
+                show_next_btn=False,
+                show_prev_btn=True,
             ),
             id="scroll-slides",
             position="sticky",
