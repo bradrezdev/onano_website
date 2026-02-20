@@ -27,12 +27,13 @@
   /**
    * Ventanas de visibilidad por slide (fracción del progreso 0–1).
    * Orden: [slide-hero, slide-science-1, slide-science-2, slide-science-3]
+   * Modificado: Slide-3 peak ajustado a 0.95 para coincidir con fin de animación
    */
   var SLIDE_WINDOWS = [
     { fadeIn: -0.1, peak: 0.0, fadeOut: 0.08, gone: 0.20 },  // slide-0: hero
     { fadeIn: 0.12, peak: 0.22, fadeOut: 0.44, gone: 0.56 }, // slide-1: aglomerado
     { fadeIn: 0.48, peak: 0.58, fadeOut: 0.74, gone: 0.84 }, // slide-2: dispersión
-    { fadeIn: 0.78, peak: 0.88, fadeOut: 1.10, gone: 1.20 }, // slide-3: encapsulación
+    { fadeIn: 0.82, peak: 0.95, fadeOut: 1.10, gone: 1.20 }, // slide-3: encapsulación (retrasado el fade-in, extendido peak)
   ];
 
   /**
@@ -40,7 +41,7 @@
    * 📐 AJUSTE MANUAL: modifica los valores para mover el punto de cada tope.
    *    Deben coincidir con el `peak` del slide destino en SLIDE_WINDOWS.
    */
-  var SNAP_TARGETS = [0.0, 0.22, 0.58, 0.88]; // peaks: hero, slide-1, slide-2, slide-3
+  var SNAP_TARGETS = [0.0, 0.22, 0.58, 0.95]; // peaks: hero, slide-1, slide-2, slide-3 (up from 0.88)
 
   /**
    * Duración de la animación de snap (ms).
