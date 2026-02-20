@@ -289,36 +289,154 @@ def hero_scroll_root() -> rx.Component:
     )
 
 
-# ── Sección siguiente ──────────────────────────────────────────
+# ── Sección: Valores institucionales ──────────────────────────
+# Agente: Bryan (UI) + Adrian (QA Design System)
+#
+# Pausa visual limpia que contrasta con la estimulación de partículas.
+# Fondo neutro BRAND_BACKGROUND_ALT — sin gradientes, sin animaciones.
+# Design System:
+#   - Contenedor inner: border-radius 24px (h > 48px, regla oficial)
+#   - Encabezados: BRAND_DARK_BLUE (#062A63)
+#   - Cuerpo: BRAND_TEXT_DARK (#383A3F)
+#   - Acento: BRAND_SECONDARY_100 (#0CBCE5)
+#   - Fondo sección: BRAND_BACKGROUND_ALT (#F2F4F9)
+# Fuente: valores_ONANO.md + brief_estrategico_ONANO.md
 
-def next_section() -> rx.Component:
-    """Primera sección después del bloque scroll-hero (destino del CTA)."""
+_VALORES = [
+    (
+        "Ciencia Aplicada",
+        "Motor de evolución. Desarrollamos cada solución desde la "
+        "investigación hasta el resultado, con respaldo científico "
+        "verificable en cada etapa.",
+    ),
+    (
+        "Innovación Consciente",
+        "Avanzamos sin perder el rumbo. Cada formulación es "
+        "intencional, medible y orientada al beneficio real de quien "
+        "confía en nuestros productos.",
+    ),
+    (
+        "Liderazgo Responsable",
+        "Construimos oportunidades sostenibles con ética, visión de "
+        "largo plazo y transparencia total en cada proceso y decisión.",
+    ),
+    (
+        "Respeto por el Entorno",
+        "Procesos formulados con respeto al cuerpo y al planeta. "
+        "La precisión científica es nuestra forma de responsabilidad.",
+    ),
+    (
+        "Visión Internacional",
+        "Estándares globales de calidad en cada producto. Una marca "
+        "diseñada para crecer con coherencia más allá de fronteras.",
+    ),
+]
+
+
+def _valor_card(nombre: str, descripcion: str) -> rx.Component:
+    """
+    Tarjeta individual de valor institucional.
+    h > 48px → border-radius: 16px per Design System (escala de cards).
+    Fondo blanco sobre BRAND_BACKGROUND_ALT — contraste sutil.
+    """
     return rx.box(
-        rx.center(
+        rx.vstack(
+            # Acento visual — barra corta BRAND_SECONDARY_100
+            rx.box(
+                width="28px",
+                height="3px",
+                background=BRAND_SECONDARY_100,
+                border_radius="2px",
+                flex_shrink="0",
+            ),
+            rx.heading(
+                nombre,
+                as_="h3",
+                style=STYLE_H3,
+                color=BRAND_DARK_BLUE,
+            ),
+            rx.text(
+                descripcion,
+                style=STYLE_BODY,
+                color=BRAND_TEXT_DARK,
+                opacity="0.82",
+            ),
+            align="start",
+            spacing="3",
+        ),
+        padding_x=["1.25em", "1.5em"],
+        padding_y=["1.25em", "1.5em"],
+        background=BRAND_WHITE,
+        border_radius="16px",
+        border=f"1px solid {BRAND_BORDER_SOFT}",
+        min_height="160px",
+    )
+
+
+def valores_section() -> rx.Component:
+    """
+    Sección Valores Institucionales — página Inicio (sitemap_ONANO.md).
+
+    Objetivo UX: "reset" visual limpio que permita al usuario respirar
+    después de la estimulación del hero scroll-driven de partículas.
+    Estética: premium, elegante, respirable. Solo texto. Sin claims técnicos.
+
+    Content source: valores_ONANO.md + brief_estrategico_ONANO.md
+    """
+    return rx.box(
+        # ── Inner card — border-radius 24px per Design System ──
+        rx.box(
+            # Header del bloque
             rx.vstack(
+                rx.text(
+                    "Fundamentos de marca",
+                    style=STYLE_LABEL,
+                    color=BRAND_SECONDARY_100,
+                    letter_spacing="0.08em",
+                    text_transform="uppercase",
+                ),
                 rx.heading(
-                    "Descubre la Nanociencia",
-                    style=STYLE_DISPLAY,
+                    "Valores institucionales",
+                    as_="h2",
+                    style=STYLE_H1,
                     color=BRAND_DARK_BLUE,
-                    text_align="center",
                 ),
                 rx.text(
-                    "Próximamente: sección científica completa.",
-                    style=STYLE_H2,
-                    color=BRAND_DARK_BLUE,
-                    text_align="center",
-                    opacity="0.6",
+                    "ONANO fundamenta cada decisión en principios que van más allá "
+                    "del producto: ciencia aplicada, liderazgo responsable, innovación "
+                    "consciente y una visión que trasciende fronteras.",
+                    style=STYLE_BODY,
+                    color=BRAND_TEXT_DARK,
+                    max_width="540px",
+                    opacity="0.85",
                 ),
-                align="center",
-                spacing="4",
+                align="start",
+                spacing="3",
+                width="100%",
             ),
-            height="100%",
+            # Grid de valores — 1 col mobile → 2 col tablet → 3 col desktop
+            rx.grid(
+                *[_valor_card(n, d) for n, d in _VALORES],
+                columns=rx.breakpoints(initial="1", sm="1", md="2", lg="2", xl="3"),
+                spacing="4",
+                width="100%",
+                margin_top="2.5em",
+            ),
+            # Container inner: border-radius 24px per Design System
+            background=BRAND_WHITE,
+            border_radius="24px",
+            padding_x=["1.5em", "2em", "3em", "3.5em", "4em"],
+            padding_y=["2em", "2.5em", "3em", "3em", "3.5em"],
+            box_shadow="0 2px 32px rgba(6, 42, 99, 0.07)",
+            width="100%",
+            max_width="1200px",
+            margin="0 auto",
         ),
-        id="ciencia",
+        id="valores",
         width="100%",
-        min_height="100vh",
-        bg=BRAND_WHITE,
-        padding="4em",
+        background=BRAND_BACKGROUND_ALT,
+        padding_y=["3em", "3.5em", "4.5em"],
+        padding_x=["1em", "1.5em", "2em", "2em", "3em"],
     )
 
 
@@ -327,7 +445,7 @@ def index() -> rx.Component:
     return rx.box(
         navbar(),
         hero_scroll_root(),
-        next_section(),
+        valores_section(),
         footer(),
         width="100%",
     )
